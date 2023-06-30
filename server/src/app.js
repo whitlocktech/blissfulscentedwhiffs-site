@@ -17,10 +17,11 @@ app.use(cors(
     origin: '*'
   }
 ))
+app.get('/', (req, res) => {  
+  res.send('Hello World')
+})
 
 app.use('/api', require('./routes/api'))
-
-
 
 app.use(express.static(path.join(__dirname, '..', 'public')))
 

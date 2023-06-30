@@ -24,13 +24,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  image: {
-    type: String,
-    required: true,
-    minlength: 10,
-    maxlength: 1000,
-    trim: true
-  },
   inStock: {
     type: Boolean,
     required: true,

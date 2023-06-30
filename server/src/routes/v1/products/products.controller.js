@@ -9,7 +9,8 @@ const {
 
 async function createProductController(req, res) { 
   try {
-    const product = await createProduct(req.body)
+    const { name, price, description, category, inStock } = req.body
+    const product = await createProduct(name, price, description, category, inStock)
     res.status(201).json(product)
   } catch (error) {
     res.status(400).json({ error: 'Error Creating Product' })

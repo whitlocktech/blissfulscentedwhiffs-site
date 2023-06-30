@@ -2,72 +2,67 @@ const fs = require('fs')
 const path = require('path')
 const productDatabase = require('./products.mongo')
 
-async function createProduct(name, price, description, category, imageFile, inStock) {
+async function createProduct(name, price, description, category, inStock) {
   try {
-    const imageUploadPath = path.join(__dirname, '..', '..', '..', 'public', 'images', imageFile.name)
 
-    await imageFile.mv(imageUploadPath)
-
-    const product = new Product({
+    const product = new productDatabase({
       name,
       price,
       description,
       category,
-      image: `/images/${imageFile.name}`,
       inStock
     })
     const savedProduct = await product.save()
     return savedProduct
-  } catch (error) {
+  } catch (error) { 
     throw error
   }
 }
 
-async function getAllProducts() {
+async function getAllProducts() { 
   try {
-    const products = await Product.find()
+    const products = await productDatabase.find()
     return products
-  } catch (error) {
+  } catch (error) { 
     throw error
   }
 }
 
 async function updateProduct(productId, updatedFields) {
   try {
-    const product = await Product.findByIdAndUpdate(
+    const product = await productDatabase.findByIdAndUpdate(
       productId,
       { $set: updatedFields },
       { new: true }
     )
-    return product
-  } catch (error) {
+  } catch (error) { 
     throw error
   }
 }
 
-async function getProductByCategory(category) {
+async function getProductByCategory(category) { 
   try {
-    const products = await Product.find({ category })
+    const products = await productDatabase.find({ category })
     return products
-  } catch (error) {
+  } catch (error) { 
     throw error
   }
 }
 
 async function getProductById(productId) { 
   try {
-    const product = await Product.findById(productId)
+    const product = await productDatabase.findById(productId)
     return product
-  } catch (error) {
+  } catch (error) { 
     throw error
   }
 }
 
-async function getProductsByCategoryAndInStock(category, inStock) {
+async function getProductsByCategoryAndInStock(category, inStock) { 
   try {
-    const products = await Product.find({ category, inStock })
+    const products = await productDatabase.find({ category, inStock })
     return products
-  } catch (error) {
+  } catch (error) { 
     throw error
   }
 }
