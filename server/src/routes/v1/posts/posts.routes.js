@@ -6,7 +6,8 @@ const {
   getPostBySlugController,
   updatePostController,
   deletePostController,
-  unpublishPostController
+  unpublishPostController,
+  publishPostController
 } = require('./posts.controller')
 
 const postsRouter = express.Router()
@@ -17,5 +18,6 @@ postsRouter.get('/:slug', getPostBySlugController)
 postsRouter.put('/:postId', updatePostController)
 postsRouter.delete('/:postId', deletePostController)
 postsRouter.put('/:postId/unpublish', unpublishPostController)
+postsRouter.put('/:postId/publish', publishPostController)
 
 module.exports = postsRouter

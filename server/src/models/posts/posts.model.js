@@ -51,18 +51,30 @@ async function updatePost(postId, updatedFields) {
 
 async function deletePost(postId) { 
   try { 
-    const post = await postDatabase.findById(postId)
-    await post.remove()
+    await postDatabase.findByIdAndDelete(postId);
   } catch (error) {
-    throw error
+    throw error;
   }
 }
+
 
 async function unpublishPost(postId) {
   try {
     const post = await postDatabase.findByIdAndUpdate(
       postId,
       { $set: { published: false } },
+      { new: true }
+    )
+  } catch (error) { 
+    throw error
+  }
+}
+
+async function publishPost(postId) { 
+  try {
+    const post = await postDatabase.findByIdAndUpdate(
+      postId,
+      { $set: { published: true } },
       { new: true }
     )
   } catch (error) { 
@@ -77,5 +89,6 @@ module.exports = {
   getPostBySlug,
   updatePost,
   deletePost,
-  unpublishPost
+  unpublishPost,
+  publishPost
 }

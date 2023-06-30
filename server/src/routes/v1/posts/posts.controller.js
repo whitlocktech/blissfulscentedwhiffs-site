@@ -4,7 +4,8 @@ const {
   getPostBySlug,
   updatePost,
   deletePost,
-  unpublishPost
+  unpublishPost,
+  publishPost
 } = require('../../../models/posts/posts.model')
 
 async function createPostController(req, res) { 
@@ -52,7 +53,8 @@ async function deletePostController(req, res) {
     await deletePost(postId)
     res.status(200).json({ message: 'Post Deleted' })
   } catch (error) {
-    res.status(400).json({ error: 'Error Deleting Post' })
+    console.error('Error Deleting Post:', error) // Log the error for debugging purposes
+    res.status(500).json({ error: 'Internal Server Error' }) // Send a generic error response
   }
 }
 
@@ -66,11 +68,22 @@ async function unpublishPostController(req, res) {
   }
 }
 
+async function publishPostController(req, res) { 
+  try {
+    const { postId } = req.params
+    const post = await publishPost(postId)
+    res.status(200).json(post)
+  } catch (error) { 
+    res.status(400).json({ error: 'Error Publishing Post' })
+  }
+}
+
 module.exports = {
   createPostController,
   getAllPostsController,
   getPostBySlugController,
   updatePostController,
   deletePostController,
-  unpublishPostController
+  unpublishPostController,
+  publishPostController
 }
