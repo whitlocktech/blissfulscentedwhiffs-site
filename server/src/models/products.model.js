@@ -34,7 +34,7 @@ async function getAllProducts() {
 
 async function updateProduct(productId, updatedFields) {
   try {
-    const product = await Product.findByIdAndUpdateProduct(
+    const product = await Product.findByIdAndUpdate(
       productId,
       { $set: updatedFields },
       { new: true }
