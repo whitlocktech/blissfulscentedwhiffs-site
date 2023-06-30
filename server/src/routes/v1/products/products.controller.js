@@ -5,7 +5,7 @@ const {
   getProductByCategory,
   getProductById,
   getProductsByCategoryAndInStock,
-} = require('../../../models/products.model')
+} = require('../../../models/products/products.model')
 
 async function createProductController(req, res) { 
   try {
