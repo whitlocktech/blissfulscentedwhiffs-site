@@ -177,9 +177,35 @@ async function getDolibarrProducts() {
     throw error;
   }
 }
+// Function DOES NOT WORK
+async function getProductAndUpdateCategoryFromDolibarr() {
+  try {
+    const products = await productDatabase.find({ category: null });
 
+    for (const product of products) {
+      try {
+        const dolibarrResponse = await axios.get(`${DOLIBARR_API_URL}/products/${product.dolibarrId}/categories?${DOLAPIKEY}`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        const categories = dolibarrResponse.data;
 
+        if (categories.length > 0) {
+          product.category = categories[0].label;
+          await product.save();
+          console.log(`Product category updated: ${product.name}`);
+        }
+      } catch (error) {
+        console.error(`Error updating product category for product ID ${product._id}:`, error);
+      }
+    }
 
+    console.log('Product categories updated from Dolibarr.');
+  } catch (error) {
+    throw new Error(`Error updating product category from Dolibarr: ${error}`);
+  }
+}
 
 
 module.exports = {
@@ -191,5 +217,6 @@ module.exports = {
   getProductsByCategoryAndInStock,
   getProductsByCategoryAndAttributes,
   searchProducts,
-  getDolibarrProducts
+  getDolibarrProducts,
+  getProductAndUpdateCategoryFromDolibarr
 }

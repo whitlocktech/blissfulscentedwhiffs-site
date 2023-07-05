@@ -3,12 +3,14 @@ const {
 } = require('../models/categories/categories.model')
 const {
   getDolibarrProducts,
+  getProductAndUpdateCategoryFromDolibarr
 } = require('../models/products/products.model')
 
 async function syncDolibarr() {
   try {
     await getDolibarrCategories()
     await getDolibarrProducts()
+    await getProductAndUpdateCategoryFromDolibarr()
   } catch (error) {
     throw error;
   }
