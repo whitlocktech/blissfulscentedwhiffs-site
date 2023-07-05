@@ -1,6 +1,10 @@
 const mongoose = require('mongoose')
+const { Schema } = require('mongoose')
 
 const productSchema = new mongoose.Schema({
+  dolibarrId: {
+    type: String,
+  },
   name: {
     type: String,
     required: true,
@@ -21,8 +25,9 @@ const productSchema = new mongoose.Schema({
     trim: true
   },
   category: {
-    type: String,
-    required: true,
+    type: Schema.Types.ObjectId,
+    ref: 'Categories',
+    default: null
   },
   inStock: {
     type: Boolean,

@@ -5,11 +5,20 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
+const rateLimit = require('express-rate-limit')
 
 const loggingMiddlewares = require('./middlewares/logging.middlewares')
 const { passport, generateToken } = require('./services/auth.js')
 
 const app = express()
+
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 100
+});
+
+
+app.use(limiter)
 
 app.use(express.json())
 app.use(helmet())
