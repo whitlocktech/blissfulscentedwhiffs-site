@@ -131,42 +131,33 @@ async function getDolibarrProducts() {
     const productsData = dolibarrResponse.data;
 
     for (const product of productsData) {
-      const existingProduct = await productDatabase.findOne({ dolibarrId: product.label });
+      const { scent, color } = extractScentAndColor(product.description);
 
-      if (existingProduct) {
-        existingProduct.dolibarrId = product.id;
-        existingProduct.name = product.label;
-        existingProduct.price = Number(product.price).toFixed(2);
-        existingProduct.description = stripHtmlTags(product.description);
-        const { scent, color } = extractScentAndColor(existingProduct.description);
-        existingProduct.attributes = {
+      const update = {
+        dolibarrId: product.id,
+        name: product.label,
+        price: Number(product.price).toFixed(2),
+        description: stripHtmlTags(product.description),
+        attributes: {
           length: product.length,
           width: product.width,
           height: product.height,
           weight: product.weight,
-          scent: scent || existingProduct.attributes.scent || '',
-          color: color || existingProduct.attributes.color || '',
-        };
+          scent: scent || '',
+          color: color || '',
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
 
-        await existingProduct.save();
-      } else {
-        const { scent, color } = extractScentAndColor(product.description);
-        const newProduct = new productDatabase({
-          dolibarrId: product.id,
-          name: product.label,
-          price: Number(product.price).toFixed(2),
-          description: stripHtmlTags(product.description),
-          attributes: {
-            length: product.length,
-            width: product.width,
-            height: product.height,
-            weight: product.weight,
-            scent: scent || '',
-            color: color || '',
-          }
-        });
+      const existingProduct = await productDatabase.findOneAndUpdate(
+        { dolibarrId: product.id },
+        update,
+        { new: true, upsert: true }
+      );
 
-        await newProduct.save();
+      if (!existingProduct) {
+        await productDatabase.create(update);
       }
     }
 
@@ -177,14 +168,15 @@ async function getDolibarrProducts() {
     throw error;
   }
 }
-// Function DOES NOT WORK
+
+
 async function getProductAndUpdateCategoryFromDolibarr() {
   try {
     const products = await productDatabase.find({ category: null });
 
     for (const product of products) {
       try {
-        const dolibarrResponse = await axios.get(`${DOLIBARR_API_URL}/products/${product.dolibarrId}/categories?${DOLAPIKEY}`, {
+        const dolibarrResponse = await axios.get(`${DOLIBARR_API_URL}/products/${product.dolibarrId}/categories?DOLAPIKEY=${DOLAPIKEY}`, {
           headers: {
             'Accept': 'application/json'
           }
@@ -192,12 +184,26 @@ async function getProductAndUpdateCategoryFromDolibarr() {
         const categories = dolibarrResponse.data;
 
         if (categories.length > 0) {
-          product.category = categories[0].label;
+          const categoryLabel = categories[0].label;
+          const existingCategory = await categoriesDatabase.findOne({ name: categoryLabel });
+
+          if (existingCategory) {
+            product.category = existingCategory._id;
+          } else {
+            const newCategory = new categoriesDatabase({ name: categoryLabel });
+            await newCategory.save();
+            product.category = newCategory._id;
+          }
+
           await product.save();
           console.log(`Product category updated: ${product.name}`);
         }
       } catch (error) {
-        console.error(`Error updating product category for product ID ${product._id}:`, error);
+        if (error.response && error.response.status === 404) {
+          console.log(`Category not found for product ID ${product._id}. Skipping category update.`);
+        } else {
+          console.error(`Error updating product category for product ID ${product._id}:`, error);
+        }
       }
     }
 
@@ -206,6 +212,8 @@ async function getProductAndUpdateCategoryFromDolibarr() {
     throw new Error(`Error updating product category from Dolibarr: ${error}`);
   }
 }
+
+
 
 
 module.exports = {
