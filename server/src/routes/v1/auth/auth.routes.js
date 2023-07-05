@@ -5,8 +5,7 @@ const {
   logout,
   getUser,
   updateUser,
-  deleteUser,
-  isAdmin
+  deleteUser
 } = require('./auth.controller')
 
 const authRouter = express.Router()

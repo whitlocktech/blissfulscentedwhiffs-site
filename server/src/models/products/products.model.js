@@ -67,11 +67,45 @@ async function getProductsByCategoryAndInStock(category, inStock) {
   }
 }
 
+async function getProductsByCategoryAndAttributes(category, attributes) {
+  try {
+    const query = { category }
+    if (attributes) {
+      const attributeFilters = attributes.split(',').map(attribute => ({ [`attributes.${attribute}`]: { $exists: true } }))
+      query['$and'] = attributeFilters
+    }
+    const products = await productDatabase.find(query)
+    return products
+  } catch (error) { 
+    throw error
+  }
+}
+
+async function searchProducts(query) {
+  try {
+    const products = await productDatabase.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { category: { $regex: query, $options: 'i' } },
+        { 'attributes.color': { $regex: query, $options: 'i' } },
+        { 'attributs.scent': { $regex: query, $options: 'i' } },
+        { 'attributes.size': { $regex: query, $options: 'i' } },
+        { 'attributes.collection': { $regex: query, $options: 'i' } },
+        { 'attributes.wickcount': { $regex: query, $options: 'i' } },
+      ]
+    })
+  } catch (error) { 
+    throw error
+  }
+}
+
 module.exports = {
   createProduct,
   getAllProducts,
   updateProduct,
   getProductByCategory,
   getProductById,
-  getProductsByCategoryAndInStock
+  getProductsByCategoryAndInStock,
+  getProductsByCategoryAndAttributes,
+  searchProducts
 }

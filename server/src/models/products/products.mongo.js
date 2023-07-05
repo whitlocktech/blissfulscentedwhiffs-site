@@ -29,6 +29,63 @@ const productSchema = new mongoose.Schema({
     required: true,
     default: true
   },
+  attributes: {
+    size: {
+      type: String,
+    },
+    color: {
+      type: String,
+    },
+    scent: {
+      type: String,
+    },
+    design: {
+      type: String,
+    },
+    brand: {
+      type: String,
+    },
+    material: {
+      type: String,
+    },
+    weight: {
+      type: String,
+    },
+    height: {
+      type: String,
+    },
+    width: {
+      type: String,
+    },
+    length: {
+      type: String,
+    },
+    diameter: {
+      type: String,
+    },
+    packaging: {
+      type: String,
+    },
+    containerMaterial: {
+      type: String,
+    },
+    hangingMethod: {
+      type: String,
+    },
+    waxType: {
+      type: String,
+    },
+    wickType: {
+      type: String,
+    },
+    wickCount: {
+      type: String,
+    },
+    collection: {
+      type: String,
+    },
+    
+  },
   createdAt: {
     type: Date,
     default: Date.now

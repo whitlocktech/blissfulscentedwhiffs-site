@@ -5,6 +5,8 @@ const {
   getProductByCategory,
   getProductById,
   getProductsByCategoryAndInStock,
+  getProductsByCategoryAndAttributes,
+  searchProducts,
 } = require('../../../models/products/products.model')
 
 async function createProductController(req, res) { 
@@ -66,6 +68,26 @@ async function getProductsByCategoryAndInStockController(req, res) {
   }
 }
 
+async function getProductsByCategoryAndAttributesController(req, res) { 
+  try {
+    const { category, attributes } = req.params
+    const products = await getProductsByCategoryAndAttributes(category, attributes)
+    res.status(200).json(products)
+  } catch (error) {
+    res.status(400).json({ error: 'Error Getting Products' })
+  }
+}
+
+async function searchProductsController(req, res) { 
+  try {
+    const { query } = req.params
+    const products = await searchProducts(query)
+    res.status(200).json(products)
+  } catch (error) { 
+    res.status(400).json({ error: 'Error Searching Products' })
+  }
+}
+
 module.exports = {
   createProductController,
   getAllProductsController,
@@ -73,4 +95,6 @@ module.exports = {
   getProductByCategoryController,
   getProductByIdController,
   getProductsByCategoryAndInStockController,
+  getProductsByCategoryAndAttributesController,
+  searchProductsController,
 }
