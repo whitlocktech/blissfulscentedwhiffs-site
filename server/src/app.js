@@ -3,8 +3,11 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
+const session = require('express-session')
+const MongoStore = require('connect-mongo')
 
-const  loggingMiddlewares  = require('./middlewares/logging.middlewares')
+const loggingMiddlewares = require('./middlewares/logging.middlewares')
+const { passport, generateToken } = require('./services/auth.js')
 
 const app = express()
 
@@ -17,6 +20,21 @@ app.use(cors(
     origin: '*'
   }
 ))
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_DB_URL,
+      collectionName: 'sessions',
+    }),
+  })
+)
+app.use(passport.initialize())
+app.use(passport.session())
+
 app.get('/', (req, res) => {  
   res.send('Hello World')
 })
