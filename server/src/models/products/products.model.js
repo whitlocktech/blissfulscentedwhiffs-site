@@ -2,7 +2,9 @@ const fs = require('fs')
 const path = require('path')
 const productDatabase = require('./products.mongo')
 const categoriesDatabase = require('../categories/categories.mongo')
+const attributesDatabase = require('../attributes/attributes.mongo')
 const { default: axios } = require('axios')
+const { model } = require('mongoose')
 require('dotenv').config()
 
 const DOLIBARR_API_URL = process.env.DOLIBARR_API_URL
@@ -45,14 +47,38 @@ async function createProduct(name, price, description, category, inStock) {
   }
 }
 
-async function getAllProducts() { 
+async function getAllProducts() {
   try {
     const products = await productDatabase.find()
-    return products
-  } catch (error) { 
-    throw error
+      .populate({
+        path: 'category',
+        model: 'Categories'
+      })
+      .populate({
+        path: 'attributes',
+        populate: [
+          {
+            path: 'attribute',
+            model: 'Attributes',
+            select: 'name'
+          },
+          {
+            path: 'value',
+            model: 'Attributes'
+          }
+        ]
+      })
+      .exec();
+
+    return products;
+  } catch (error) {
+    throw error;
   }
 }
+
+
+
+
 
 async function updateProduct(productId, updatedFields) {
   try {
@@ -136,8 +162,11 @@ async function getDolibarrProducts() {
       const update = {
         dolibarrId: product.id,
         name: product.label,
+        ref: product.ref,
         price: Number(product.price).toFixed(2),
         description: stripHtmlTags(product.description),
+        stockCount: product.stock_reel,
+        inStock: product.stock_reel > 0 ? true : false,
         attributes: {
           length: product.length,
           width: product.width,
@@ -166,6 +195,19 @@ async function getDolibarrProducts() {
     return products;
   } catch (error) {
     throw error;
+  }
+}
+async function getParentId() {
+  try {
+    const products = await productDatabase.find()
+    for (const product of products) { 
+      const dolibarrResponse = await axios.get(`${DOLIBARR_API_URL}/products/${product.dolibarrId}?includeparentid=true&DOLAPIKEY=${DOLAPIKEY}`)
+      const parent = dolibarrResponse.data.fk_product_parent
+      product.parentId = parent
+      await product.save()
+    }
+  } catch (error) {
+    throw new Error(`Error updating products with parent ids: ${error.message}`);
   }
 }
 
@@ -213,6 +255,86 @@ async function getProductAndUpdateCategoryFromDolibarr() {
   }
 }
 
+async function addProductCategoryFromParentIfNotExists() {
+  try {
+    const products = await productDatabase.find({ parentId: { $exists: false }})
+
+    for (const product of products) {
+      if (product.parentId) {
+        const parent = await productDatabase.findById(product.parentId);
+        console.log(`Parent ID: ${parent._id}`);
+        console.log(`Parent Category: ${parent.category}`);
+        if (parent.category) {
+          const existingCategory = await categoriesDatabase.findOne({ name: parent.category.name });
+          console.log(`Existing Category: ${existingCategory}`);
+          if (existingCategory) {
+            product.category = existingCategory._id; // Use the _id property instead of dolibarrId
+          } else {
+            const newCategory = new categoriesDatabase({ name: parent.category.name });
+            await newCategory.save();
+            product.category = newCategory._id; // Use the _id property instead of dolibarrId
+          }
+          await product.save();
+          console.log(`Product category added: ${product.name}`);
+        }
+      }
+    }
+  } catch (error) { 
+    throw new Error(`Error adding product category from parent: ${error.message}`);
+  }
+}
+async function addChildIdFromDolibarr() {
+  try {
+    const products = await productDatabase.find();
+
+    for (const product of products) {
+      const dolibarrResponse = await axios.get(`${DOLIBARR_API_URL}/products/${product.dolibarrId}/variants?DOLAPIKEY=${DOLAPIKEY}`);
+      const children = dolibarrResponse.data[0]?.fk_product_child || []
+      console.log(`Children: ${children}`);
+      product.childIds = children;
+      await product.save();
+    }
+  } catch (error) {
+    throw new Error(`Error adding child id from Dolibarr: ${error.message}`);
+  }
+}
+async function getProductAttributesByRefrenceFromDolibarr() {
+  try {
+    const products = await productDatabase.find();
+
+    for (const product of products) {
+      const dolibarrResponse = await axios.get(`${DOLIBARR_API_URL}/products/ref/${product.ref}?DOLAPIKEY=${DOLAPIKEY}`);
+      const attributes = dolibarrResponse.data.description;
+
+      const attributeRegex = /<strong>(.*?)<\/strong>:(.*?)<br \/>/g;
+      let match;
+      const attributeList = [];
+
+      while ((match = attributeRegex.exec(attributes)) !== null) {
+        const attributeName = match[1].trim();
+        const attributeValue = match[2].trim();
+
+        const attribute = await attributesDatabase.findOne({ name: attributeName }).exec();
+        const value = await attributesDatabase.findOne({ 'values.name': attributeValue }).exec();
+
+        if (attribute && value) {
+          attributeList.push({
+            attribute: attribute._id,
+            value: value._id,
+          });
+        }
+      }
+
+      product.attributes = attributeList;
+      await product.save();
+      console.log(`Product attributes added: ${product.name}`);
+    }
+
+    console.log('Product attributes retrieved from Dolibarr.');
+  } catch (error) {
+    throw new Error(`Error getting product attributes from Dolibarr: ${error.message}`);
+  }
+}
 
 
 
@@ -226,5 +348,9 @@ module.exports = {
   getProductsByCategoryAndAttributes,
   searchProducts,
   getDolibarrProducts,
-  getProductAndUpdateCategoryFromDolibarr
+  getProductAndUpdateCategoryFromDolibarr,
+  getParentId,
+  addProductCategoryFromParentIfNotExists,
+  addChildIdFromDolibarr,
+  getProductAttributesByRefrenceFromDolibarr,
 }

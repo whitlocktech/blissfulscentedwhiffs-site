@@ -3,14 +3,43 @@ const {
 } = require('../models/categories/categories.model')
 const {
   getDolibarrProducts,
-  getProductAndUpdateCategoryFromDolibarr
+  getProductAndUpdateCategoryFromDolibarr,
+  getParentId,
+  addProductCategoryFromParentIfNotExists,
+  addChildIdFromDolibarr,
+  getProductAttributesByRefrenceFromDolibarr
 } = require('../models/products/products.model')
+const {
+  getDolibarrAttributes,
+  getDolibarrAttributeValues
+} = require('../models/attributes/attributes.model')
+
+const {
+  getCompanyFromDolibarr,
+  updateCompanySocialMediaFromDolibarr
+} = require('../models/company/company.model')
+
+const {
+  getAdminUsersFromDolibarr,
+  syncUsersDatabaseToDolibarr,
+  syncUsersDolibarrIdToDatabase
+} = require('../models/users/users.model')
 
 async function syncDolibarr() {
   try {
     await getDolibarrCategories()
     await getDolibarrProducts()
     await getProductAndUpdateCategoryFromDolibarr()
+    await getDolibarrAttributes()
+    await getDolibarrAttributeValues()
+    await getParentId()
+    await addProductCategoryFromParentIfNotExists()
+    await addChildIdFromDolibarr()
+    await getCompanyFromDolibarr()
+    await updateCompanySocialMediaFromDolibarr()
+    await getAdminUsersFromDolibarr()
+    await syncUsersDatabaseToDolibarr()
+    await syncUsersDolibarrIdToDatabase()
   } catch (error) {
     throw error;
   }
@@ -21,7 +50,7 @@ async function intervalSync() {
     async function syncAndScheduleNext() {
       try {
         await syncDolibarr();
-        setTimeout(syncAndScheduleNext, 5 * 60 * 1000)
+        setTimeout(syncAndScheduleNext, 10 * 60 * 1000)
       } catch (error) {
         throw error
       }

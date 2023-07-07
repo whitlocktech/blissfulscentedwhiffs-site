@@ -5,6 +5,10 @@ const productSchema = new mongoose.Schema({
   dolibarrId: {
     type: String,
   },
+  ref: {
+    type: String,
+    trim: true,
+  },
   name: {
     type: String,
     required: true,
@@ -29,68 +33,26 @@ const productSchema = new mongoose.Schema({
     ref: 'Categories',
     default: null
   },
+  stockCount: {
+    type: Number,
+  },
   inStock: {
     type: Boolean,
     required: true,
     default: true
   },
-  attributes: {
-    size: {
-      type: String,
-    },
-    color: {
-      type: String,
-    },
-    scent: {
-      type: String,
-    },
-    design: {
-      type: String,
-    },
-    brand: {
-      type: String,
-    },
-    material: {
-      type: String,
-    },
-    weight: {
-      type: String,
-    },
-    height: {
-      type: String,
-    },
-    width: {
-      type: String,
-    },
-    length: {
-      type: String,
-    },
-    diameter: {
-      type: String,
-    },
-    packaging: {
-      type: String,
-    },
-    containerMaterial: {
-      type: String,
-    },
-    hangingMethod: {
-      type: String,
-    },
-    waxType: {
-      type: String,
-    },
-    wickType: {
-      type: String,
-    },
-    wickCount: {
-      type: String,
-    },
-    collection: {
-      type: String,
-    },
-    
-  },
+  attributes: [
+    {
+      attribute: {
+        type: Schema.Types.ObjectId,
+        ref: 'Attributes',
+      },
+      value: {
+        type: Schema.Types.ObjectId,
+        ref: 'Attributes.values',
+      }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now
@@ -102,7 +64,13 @@ const productSchema = new mongoose.Schema({
   avaliable: {
     type: Boolean,
     default: true
-  }
+  },
+  parentId: {
+    type: String,
+  },
+  childIds: [{
+    type: String,
+    }]
 })
 
 module.exports = mongoose.model('Product', productSchema)

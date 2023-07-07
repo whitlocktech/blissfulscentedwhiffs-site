@@ -2,6 +2,9 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
 const userSchema = new mongoose.Schema({
+  dolibarrId: {
+    type: String,
+  },
   username: {
     type: String,
     required: true,
@@ -31,23 +34,23 @@ const userSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    trim: true
+    trim: true,
   },
   address: {
     type: String,
-    trim: true
+    trim: true,
   },
   city: {
     type: String,
     trim: true,
   },
   state: {
-    type: String,
-    trim: true
+    type: String, 
+    trim: true,
   },
   zip: {
     type: String,
-    trim: true
+    trim: true,
   },
   role: {
     type: String,
@@ -62,7 +65,8 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
   },
-})
+});
+
 
 userSchema.pre('save', async function (next) { 
   try {
