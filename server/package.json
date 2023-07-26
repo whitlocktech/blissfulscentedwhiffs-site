@@ -30,7 +30,7 @@
     "express-session": "^1.17.3",
     "geonames.js": "^3.0.6",
     "helmet": "^7.0.0",
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "^9.0.1",
     "mongoose": "^7.3.1",
     "morgan": "^1.10.0",
     "passport": "^0.5.0",
